@@ -1,0 +1,331 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CYPHERIX '26 | DOOMSDAY PROTOCOL</title>
+    <script src="/socket.io/socket.io.js"></script>
+    <style>
+        :root {
+            --neon-green: #00ff66;
+            --jarvis-yellow: #ffcc00;
+            --bg-dark: #030704;
+            --alert-red: #ff3344;
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Courier New', monospace; }
+
+        body {
+            background-color: var(--bg-dark);
+            color: var(--neon-green);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            overflow-x: hidden;
+        }
+
+        /* Header & Main Story Container */
+        header {
+            border-bottom: 2px solid var(--neon-green);
+            padding: 20px;
+            text-align: center;
+            background: rgba(0,255,102,0.03);
+        }
+
+        .timer-display {
+            font-size: 1.8rem;
+            color: var(--jarvis-yellow);
+            margin-top: 10px;
+            letter-spacing: 4px;
+            font-weight: bold;
+        }
+
+        .main-content {
+            padding: 40px;
+            max-width: 900px;
+            margin: 0 auto;
+        }
+
+        .story-card {
+            border: 1px solid var(--neon-green);
+            background: rgba(10, 32, 14, 0.4);
+            padding: 20px;
+            margin-bottom: 20px;
+            border-left: 5px solid var(--neon-green);
+        }
+
+        .story-card.twist {
+            border-color: var(--alert-red);
+            border-left-color: var(--alert-red);
+            color: #ff99aa;
+        }
+
+        /* FLOATING 3D YELLOW JARVIS ORB */
+        .jarvis-orb-container {
+            position: fixed;
+            bottom: 30px;
+            right: 30px;
+            z-index: 1000;
+            display: flex;
+            align-items: flex-end;
+            flex-direction: column;
+        }
+
+        .jarvis-orb {
+            width: 65px;
+            height: 65px;
+            border-radius: 50%;
+            background: radial-gradient(circle at 30% 30%, #fffae6, #ffcc00 40%, #997a00 90%);
+            box-shadow: 0 0 20px var(--jarvis-yellow), inset 0 0 15px #ffffff;
+            cursor: pointer;
+            animation: float 3s ease-in-out infinite, pulseGlow 2s infinite alternate;
+            transition: transform 0.3s ease;
+            position: relative;
+        }
+
+        .jarvis-orb:hover {
+            transform: scale(1.15);
+        }
+
+        .jarvis-orb.incoming {
+            animation: pulseIncoming 0.5s infinite alternate !important;
+            box-shadow: 0 0 35px var(--alert-red);
+            background: radial-gradient(circle at 30% 30%, #ffffff, #ff3344 40%, #880011 90%);
+        }
+
+        @keyframes float {
+            0%, 100% { transform: translateY(0px); }
+            50% { transform: translateY(-10px); }
+        }
+
+        @keyframes pulseGlow {
+            from { box-shadow: 0 0 15px var(--jarvis-yellow); }
+            to { box-shadow: 0 0 30px var(--jarvis-yellow); }
+        }
+
+        @keyframes pulseIncoming {
+            from { transform: scale(1); box-shadow: 0 0 20px var(--alert-red); }
+            to { transform: scale(1.25); box-shadow: 0 0 40px var(--alert-red); }
+        }
+
+        /* SLIDE-OUT JARVIS PANEL */
+        .jarvis-panel {
+            width: 360px;
+            height: 480px;
+            background: #080c05;
+            border: 2px solid var(--jarvis-yellow);
+            border-radius: 8px;
+            box-shadow: 0 0 25px rgba(255, 204, 0, 0.3);
+            display: none;
+            flex-direction: column;
+            margin-bottom: 15px;
+            overflow: hidden;
+            animation: slideUp 0.3s forwards;
+        }
+
+        @keyframes slideUp {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .panel-header {
+            background: #141a08;
+            padding: 12px;
+            border-bottom: 1px solid var(--jarvis-yellow);
+            color: var(--jarvis-yellow);
+            font-weight: bold;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 0.85rem;
+        }
+
+        .panel-body {
+            flex: 1;
+            padding: 15px;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            font-size: 0.85rem;
+        }
+
+        .panel-msg {
+            padding: 8px 12px;
+            border-radius: 4px;
+            line-height: 1.4;
+        }
+
+        .panel-msg.jarvis {
+            background: #121f0a;
+            border-left: 3px solid var(--jarvis-yellow);
+            color: #ffe680;
+        }
+
+        .panel-msg.user {
+            background: #003311;
+            align-self: flex-end;
+            color: #fff;
+        }
+
+        .panel-msg.transmission {
+            background: #2a080c;
+            border-left: 3px solid var(--alert-red);
+            color: #ffb3ba;
+        }
+
+        .panel-input {
+            display: flex;
+            border-top: 1px solid var(--jarvis-yellow);
+            padding: 8px;
+            background: #000;
+        }
+
+        .panel-input input {
+            flex: 1;
+            background: transparent;
+            border: none;
+            color: var(--jarvis-yellow);
+            outline: none;
+            font-size: 0.85rem;
+        }
+
+        .panel-input button {
+            background: var(--jarvis-yellow);
+            color: #000;
+            border: none;
+            padding: 6px 12px;
+            font-weight: bold;
+            cursor: pointer;
+        }
+    </style>
+</head>
+<body>
+
+<header>
+    <h1>CYPHERIX '26 | DOOMSDAY PROTOCOL</h1>
+    <p style="color:#88ffaa; font-size:0.9rem;">PART OF CYVESTA '26 // LOCAL LAB OPERATIONS</p>
+    <div class="timer-display" id="timer">DOOMSDAY TIMER: 70:00</div>
+</header>
+
+<div class="main-content">
+    <div class="story-card">
+        <h3>⚡ MISSION BRIEFING</h3>
+        <p>Doctor Doom has seized control of institutional network nodes. 5 sector overrides remain scattered across Web, Cryptography, Forensics, Steganography, and OSINT.</p>
+    </div>
+
+    <div class="story-card twist">
+        <h3>⚠️ INTERCEPTED COMMUNICATIONS DETECTED</h3>
+        <p>JARVIS is monitoring background radio frequencies. Watch the floating yellow AI unit for real-time intel drops and incoming transmissions!</p>
+    </div>
+</div>
+
+<!-- FLOATING 3D JARVIS ORB & PANEL -->
+<div class="jarvis-orb-container">
+    <div class="jarvis-panel" id="jarvisPanel">
+        <div class="panel-header">
+            <span>🟡 JARVIS CRYPTIC ANALYZER</span>
+            <span style="cursor:pointer;" onclick="togglePanel()">✖</span>
+        </div>
+        <div class="panel-body" id="panelBody">
+            <div class="panel-msg jarvis">
+                JARVIS Online. Enter your sector queries below. Answers will be provided strictly in cryptic tactical hints.
+            </div>
+        </div>
+        <div class="panel-input">
+            <input type="text" id="userInput" placeholder="Analyze query..." onkeydown="if(event.key==='Enter') queryJarvis()">
+            <button onclick="queryJarvis()">SEND</button>
+        </div>
+    </div>
+
+    <div class="jarvis-orb" id="jarvisOrb" onclick="togglePanel()" title="Open JARVIS AI Panel"></div>
+</div>
+
+<script>
+    const socket = io();
+    let panelOpen = false;
+
+    function togglePanel() {
+        const panel = document.getElementById('jarvisPanel');
+        const orb = document.getElementById('jarvisOrb');
+        panelOpen = !panelOpen;
+        panel.style.display = panelOpen ? 'flex' : 'none';
+        orb.classList.remove('incoming'); // Reset alert state when opened
+    }
+
+    // --- REAL-TIME TRANSMISSION BROADCAST LISTENER ---
+    socket.on('newTransmission', (data) => {
+        const orb = document.getElementById('jarvisOrb');
+        const panelBody = document.getElementById('panelBody');
+
+        // Alert user via Orb Animation
+        if (!panelOpen) {
+            orb.classList.add('incoming');
+        }
+
+        // Add Transmission to Panel
+        const msgDiv = document.createElement('div');
+        msgDiv.className = 'panel-msg transmission';
+        msgDiv.innerHTML = `<strong>🚨 ${data.sender}:</strong><br>${data.message}`;
+        
+        if (data.audioUrl) {
+            msgDiv.innerHTML += `<br><audio controls autoplay src="${data.audioUrl}" style="width:100%; margin-top:8px;"></audio>`;
+        }
+
+        panelBody.appendChild(msgDiv);
+        panelBody.scrollTop = panelBody.scrollHeight;
+    });
+
+    // --- CRYPTIC AI ANALYZER LOGIC ---
+    function queryJarvis() {
+        const input = document.getElementById('userInput');
+        const text = input.value.trim();
+        if (!text) return;
+
+        appendMsg(text, 'user');
+        input.value = '';
+
+        setTimeout(() => {
+            const reply = generateCrypticHint(text.toLowerCase());
+            appendMsg(reply, 'jarvis');
+        }, 500);
+    }
+
+    function generateCrypticHint(q) {
+        if (q.includes('web') || q.includes('gate') || q.includes('html')) {
+            return "👁️ [CRYPTIC INTEL]: Shadows hide where render engines do not draw. Inspect the client-side scroll text below the DOM.";
+        }
+        if (q.includes('stego') || q.includes('image') || q.includes('castle')) {
+            return "🧩 [CRYPTIC INTEL]: The visual spectrum is a distraction. The truth rests in the silent EXIF metadata properties wrapper.";
+        }
+        if (q.includes('pcap') || q.includes('packet') || q.includes('forensics') || q.includes('network')) {
+            return "📡 [CRYPTIC INTEL]: Decipher the raw TCP data stream. Plaintext echoes converted through 64 base units hold the payload.";
+        }
+        if (q.includes('osint') || q.includes('who') || q.includes('doom') || q.includes('apprentice')) {
+            return "🕵️ [CRYPTIC INTEL]: Look closer at the event coordinator's digital trail... check public commit logs on GitHub where the apprentice hid the blueprint.";
+        }
+        return "🔮 [CRYPTIC INTEL]: The pattern remains obscure. Reframe your query or wait for incoming broadcasts.";
+    }
+
+    function appendMsg(text, type) {
+        const panelBody = document.getElementById('panelBody');
+        const div = document.createElement('div');
+        div.className = `panel-msg ${type}`;
+        div.innerText = text;
+        panelBody.appendChild(div);
+        panelBody.scrollTop = panelBody.scrollHeight;
+    }
+
+    // --- COUNTDOWN TIMER ---
+    let time = 70 * 60;
+    setInterval(() => {
+        if (time <= 0) return;
+        time--;
+        const m = Math.floor(time / 60);
+        const s = time % 60;
+        document.getElementById('timer').innerText = `DOOMSDAY TIMER: ${m.toString().padStart(2,'0')}:${s.toString().padStart(2,'0')}`;
+    }, 1000);
+</script>
+
+</body>
+</html>

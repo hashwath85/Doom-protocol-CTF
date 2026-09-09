@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>CYPHERIX '26 | TRANSMISSION DECK</title>
+    <script src="/socket.io/socket.io.js"></script>
+    <style>
+        body { background-color: #030704; color: #ffcc00; font-family: monospace; padding: 40px; }
+        .box { border: 2px solid #ffcc00; padding: 25px; max-width: 650px; margin: 0 auto; background: #0c0f04; box-shadow: 0 0 20px rgba(255, 204, 0, 0.2); }
+        input, textarea, select, button { width: 100%; padding: 12px; margin-top: 10px; background: #000; border: 1px solid #ffcc00; color: #ffcc00; font-family: monospace; box-sizing: border-box; }
+        button { background: #ffcc00; color: #000; font-weight: bold; cursor: pointer; font-size: 1.1rem; }
+        button:hover { background: #ffe680; }
+    </style>
+</head>
+<body>
+
+<div class="box">
+    <h2>⚡ DOOM'S APPRENTICE TRANSMISSION DECK</h2>
+    <p style="color:#aaa;">Broadcast audio intercepts & cryptic live clues directly to JARVIS panels!</p>
+    
+    <label>Transmission Type:</label>
+    <select id="transType">
+        <option value="text">Text / Cryptic Hint</option>
+        <option value="audio">Audio Intercept Broadcast</option>
+    </select>
+
+    <input type="text" id="senderName" placeholder="Sender Label (e.g., INTERCEPTED_COMM_04 / DOOM)">
+    <textarea id="transMsg" rows="4" placeholder="Enter message text or audio prompt script..."></textarea>
+    <input type="text" id="audioUrl" placeholder="Optional Audio File URL (e.g. /audio/doom_intercept.mp3)">
+    
+    <button onclick="sendPush()">📡 BROADCAST TRANSMISSION TO ALL TEAMS</button>
+</div>
+
+<script>
+    const socket = io();
+    function sendPush() {
+        const type = document.getElementById('transType').value;
+        const sender = document.getElementById('senderName').value || 'INCOMING TRANSMISSION';
+        const message = document.getElementById('transMsg').value;
+        const audioUrl = document.getElementById('audioUrl').value;
+
+        if (message) {
+            socket.emit('pushTransmission', { type, sender, message, audioUrl });
+            alert('Transmission broadcasted to all participant screens!');
+            document.getElementById('transMsg').value = '';
+        }
+    }
+</script>
+</body>
+</html>
