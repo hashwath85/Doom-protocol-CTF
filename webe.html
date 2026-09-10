@@ -1,0 +1,393 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Welcome To SQUAD</title>
+    <!-- Font Awesome for Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Google Fonts for Cyberpunk/Futuristic feel -->
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Rajdhani:wght@500;600;700&display=swap" rel="stylesheet">
+    <style>
+        /* --- Global Styles & Variables --- */
+        :root {
+            --neon-green: #00ff66;
+            --neon-glow: rgba(0, 255, 102, 0.7);
+            --bright-neon: #33ff88;
+            --dark-bg: #030a06;
+            --card-bg: rgba(6, 32, 18, 0.88);
+            --input-bg: rgba(4, 45, 24, 0.8);
+            --danger-red: #ff3333;
+            --danger-glow: rgba(255, 51, 51, 0.6);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Rajdhani', sans-serif;
+        }
+
+        body {
+            background-color: var(--dark-bg);
+            color: #ffffff;
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            overflow-x: hidden;
+            position: relative;
+        }
+
+        /* --- Updated Background Rules for background.png --- */
+        .background-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            background: url('background.png') no-repeat center center fixed;
+            background-size: cover;
+            z-index: -2;
+        }
+
+        .concrete-lines {
+            display: none;
+        }
+
+        /* Main Container */
+        .main-container {
+            width: 100%;
+            max-width: 1100px;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        /* Header / Title */
+        .header-title {
+            text-align: center;
+            margin-bottom: 35px;
+        }
+
+        .header-title h3 {
+            font-family: 'Orbitron', sans-serif;
+            color: #b5ffd5;
+            font-size: 1.3rem;
+            letter-spacing: 4px;
+            text-shadow: 0 0 10px var(--neon-glow);
+        }
+
+        .header-title h1 {
+            font-family: 'Orbitron', sans-serif;
+            color: var(--bright-neon);
+            font-size: 3.8rem;
+            font-weight: 900;
+            letter-spacing: 14px;
+            text-shadow: 0 0 20px var(--neon-green), 0 0 40px var(--neon-glow);
+            border: 3px solid var(--neon-green);
+            box-shadow: 0 0 20px var(--neon-glow), inset 0 0 15px var(--neon-glow);
+            padding: 8px 35px;
+            display: inline-block;
+            margin-top: 8px;
+            clip-path: polygon(10% 0, 90% 0, 100% 30%, 100% 100%, 0 100%, 0 30%);
+            background: rgba(0, 20, 10, 0.7);
+        }
+
+        /* Layout Grid */
+        .content-wrapper {
+            display: flex;
+            width: 100%;
+            justify-content: space-between;
+            align-items: center;
+            gap: 40px;
+        }
+
+        /* Left Character Section */
+        .character-section {
+            flex: 1;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .doom-avatar-container {
+            width: 240px;
+            height: 240px;
+            border-radius: 50%;
+            border: 3px solid var(--bright-neon);
+            box-shadow: 0 0 30px var(--neon-green), 0 0 60px var(--neon-glow), inset 0 0 20px var(--neon-green);
+            overflow: hidden;
+            position: relative;
+            background: #000;
+        }
+
+        .doom-avatar-container img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            filter: brightness(1.15) contrast(1.1);
+        }
+
+        /* Right Login Card with High Brightness Glow */
+        .login-card {
+            flex: 1;
+            background: var(--card-bg);
+            border: 2px solid var(--neon-green);
+            box-shadow: 0 0 30px var(--neon-glow), 0 0 60px rgba(0, 255, 102, 0.2);
+            padding: 40px 30px;
+            position: relative;
+            backdrop-filter: blur(10px);
+            clip-path: polygon(0 0, 92% 0, 100% 8%, 100% 100%, 8% 100%, 0 92%);
+            transition: all 0.3s ease;
+        }
+
+        .card-header {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            margin-bottom: 25px;
+        }
+
+        .card-header h2 {
+            font-family: 'Orbitron', sans-serif;
+            color: var(--bright-neon);
+            font-size: 2rem;
+            letter-spacing: 2px;
+            text-shadow: 0 0 10px var(--neon-glow);
+        }
+
+        .tech-line {
+            height: 3px;
+            flex-grow: 1;
+            background: linear-gradient(to right, var(--neon-green), transparent);
+            box-shadow: 0 0 8px var(--neon-green);
+        }
+
+        /* Status Message (Access Denied Alert) */
+        .status-message {
+            display: none;
+            padding: 12px;
+            margin-bottom: 20px;
+            background-color: rgba(255, 51, 51, 0.25);
+            border: 2px solid var(--danger-red);
+            color: var(--danger-red);
+            font-family: 'Orbitron', sans-serif;
+            font-weight: 700;
+            text-align: center;
+            letter-spacing: 2px;
+            box-shadow: 0 0 15px var(--danger-glow);
+            animation: pulse 1s infinite alternate;
+        }
+
+        @keyframes pulse {
+            0% { box-shadow: 0 0 8px var(--danger-glow); }
+            100% { box-shadow: 0 0 20px var(--danger-glow); }
+        }
+
+        /* Inputs */
+        .input-group {
+            position: relative;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            background: var(--input-bg);
+            border: 1px solid var(--neon-green);
+            box-shadow: 0 0 8px rgba(0, 255, 102, 0.3);
+            border-radius: 25px;
+            padding: 5px 15px;
+            transition: all 0.3s ease;
+        }
+
+        .input-group:focus-within {
+            border-color: var(--bright-neon);
+            box-shadow: 0 0 18px var(--neon-glow);
+        }
+
+        .input-icon {
+            color: var(--bright-neon);
+            font-size: 1.1rem;
+            margin-right: 12px;
+            width: 20px;
+            text-align: center;
+            filter: drop-shadow(0 0 5px var(--neon-green));
+        }
+
+        .input-group input {
+            width: 100%;
+            background: transparent;
+            border: none;
+            outline: none;
+            color: #fff;
+            font-size: 1rem;
+            padding: 10px 0;
+            font-weight: 600;
+        }
+
+        .input-group input::placeholder {
+            color: rgba(255, 255, 255, 0.65);
+        }
+
+        /* Form Options */
+        .form-options {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 0.95rem;
+            margin-bottom: 30px;
+            color: rgba(255, 255, 255, 0.9);
+        }
+
+        .checkbox-container {
+            display: flex;
+            align-items: center;
+            cursor: pointer;
+        }
+
+        .checkbox-container input {
+            margin-right: 8px;
+            accent-color: var(--neon-green);
+        }
+
+        .forgot-link {
+            color: var(--bright-neon);
+            text-decoration: none;
+            transition: text-shadow 0.3s;
+        }
+
+        .forgot-link:hover {
+            text-shadow: 0 0 12px var(--neon-glow);
+        }
+
+        /* Button */
+        .submit-btn {
+            width: 100%;
+            background: linear-gradient(90deg, #00d959, var(--bright-neon));
+            border: none;
+            padding: 12px;
+            color: #000;
+            font-family: 'Orbitron', sans-serif;
+            font-weight: 900;
+            font-size: 1.25rem;
+            letter-spacing: 3px;
+            cursor: pointer;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 10px;
+            clip-path: polygon(5% 0, 95% 0, 100% 50%, 95% 100%, 5% 100%, 0 50%);
+            box-shadow: 0 0 20px var(--neon-glow);
+            transition: all 0.3s ease;
+        }
+
+        .submit-btn:hover {
+            box-shadow: 0 0 35px var(--neon-green);
+            transform: scale(1.02);
+        }
+
+        /* Responsive adjustments */
+        @media (max-width: 768px) {
+            .content-wrapper {
+                flex-direction: column;
+            }
+            .character-section {
+                display: none;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Ambient High Brightness Background Elements -->
+    <div class="background-overlay"></div>
+    <div class="concrete-lines"></div>
+
+    <div class="main-container">
+        <!-- Header / Logo Area -->
+        <header class="header-title">
+            <h3>WELCOME TO</h3>
+            <h1>SQUAD</h1>
+        </header>
+
+        <!-- Main Content Grid -->
+        <div class="content-wrapper">
+            
+            <!-- Left Character Section -->
+            <div class="character-section">
+                <div class="doom-avatar-container">
+                    <img src="DOOOM.png" alt="Doctor Doom">
+                </div>
+            </div>
+
+            <!-- Login Form Right Section -->
+            <div class="login-card">
+                <div class="card-header">
+                    <h2>LOGIN</h2>
+                    <span class="tech-line"></span>
+                </div>
+
+                <!-- Access Denied Alert Message Container -->
+                <div id="statusMessage" class="status-message"></div>
+
+                <form id="loginForm" autocomplete="off">
+                    <!-- Username / Email Input -->
+                    <div class="input-group">
+                        <div class="input-icon">
+                            <i class="fa-regular fa-user"></i>
+                        </div>
+                        <input type="text" id="username" placeholder="Username / Email" required>
+                    </div>
+
+                    <!-- Password Input -->
+                    <div class="input-group">
+                        <div class="input-icon">
+                            <i class="fa-solid fa-lock"></i>
+                        </div>
+                        <input type="password" id="password" placeholder="Password" required>
+                    </div>
+
+                    <!-- Options (Remember Me / f.l.a.g = UTFSR2UyNHpkSGN3Y210Zk0zaHdNVEF4ZEY5d01ISjBYekIyTTNKeU1XUXpmUT09 -->
+                    <div class="form-options">
+                        <label class="checkbox-container">
+                            <input type="checkbox" id="rememberMe">
+                            Remember me
+                        </label>
+                        <a href="#" class="forgot-link">Forgot password?</a>
+                    </div>
+
+                    <!-- Submit Button -->
+                    <button type="submit" class="submit-btn">
+                        <span>LOGIN</span>
+                        <i class="fa-solid fa-arrow-right-long"></i>
+                    </button>
+                </form>
+            </div>
+
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const loginForm = document.getElementById('loginForm');
+            const statusMessage = document.getElementById('statusMessage');
+
+            loginForm.addEventListener('submit', (e) => {
+                e.preventDefault();
+
+                statusMessage.textContent = 'ACCESS DENIED: INVALID CREDENTIALS';
+                statusMessage.style.display = 'block';
+
+                const card = document.querySelector('.login-card');
+                card.style.borderColor = 'var(--danger-red)';
+                card.style.boxShadow = '0 0 35px var(--danger-glow)';
+
+                setTimeout(() => {
+                    card.style.borderColor = 'var(--neon-green)';
+                    card.style.boxShadow = '0 0 30px var(--neon-glow), 0 0 60px rgba(0, 255, 102, 0.2)';
+                }, 1500);
+            });
+        });
+    </script>
+</body>
+</html>
